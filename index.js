@@ -18,7 +18,10 @@ const io = new Server(server, {
   },
 });
 
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+}));
 app.use(express.json());
 
 
