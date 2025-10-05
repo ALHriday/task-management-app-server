@@ -8,32 +8,31 @@ const { Server } = require("socket.io");
 const port = process.env.PORT || 3000;
 
 const app = express();
-
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"], // Replace with your frontend URL
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  },
-});
 
+app.use(express.json());
 app.use(cors({
   origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"],
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
-app.use(express.json());
+
+
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
+});
 
 
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
-  // Listening for messages from the client
   socket.on("task_updated", () => {
-    io.emit("refresh_tasks"); // Broadcast message to all clients
+    io.emit("refresh_tasks");
   });
 
-  // Handle user disconnection
   socket.on("disconnect", () => {
     console.log(`User Disconnected: ${socket.id}`);
   });
@@ -41,7 +40,6 @@ io.on("connection", (socket) => {
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { title } = require('process');
 const uri = `mongodb+srv://${process.env.DB_USER_NAME}:${process.env.DB_USER_PASS}@cluster0.lgngp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -139,17 +137,10 @@ async function run() {
       res.send(data);
     })
 
-    // app.get('/users/:userEmail', async (req, res) => {
-    //   const userEmail = req.params.userEmail;
-    //   const data = await usersCollection.findOne({userEmail})
-    //   res.send(data);
-    // })
-
     app.post('/users', async (req, res) => {
       try {
         const { email } = req.body;
         const user = req.body;
-
         const existingUser = await usersCollection.findOne({ email });
 
         if (existingUser) {
@@ -157,7 +148,7 @@ async function run() {
         }
 
         const data = await usersCollection.insertOne(user);
-        res.send(data);
+        return res.status(200).send(data);
 
       } catch (error) {
         res.status(500).send({ message: 'Internal Server Error', error: error.message })
