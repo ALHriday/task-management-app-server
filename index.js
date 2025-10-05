@@ -26,9 +26,8 @@ io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
   // Listening for messages from the client
-  socket.on("send_message", (data) => {
-    console.log("Message received:", data);
-    io.emit("receive_message", data); // Broadcast message to all clients
+  socket.on("task_updated", () => {
+    io.emit("refresh_tasks"); // Broadcast message to all clients
   });
 
   // Handle user disconnection
@@ -39,6 +38,7 @@ io.on("connection", (socket) => {
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { title } = require('process');
 const uri = `mongodb+srv://${process.env.DB_USER_NAME}:${process.env.DB_USER_PASS}@cluster0.lgngp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -82,8 +82,29 @@ async function run() {
 
     app.get('/todoList/:userEmail', async (req, res) => {
       const userEmail = req.params.userEmail;
-      // const query = { _id: new ObjectId(id) };
-      const result = await todoCollection.find({userEmail}).toArray();
+      const result = await todoCollection.find({ userEmail }).toArray();
+      res.send(result);
+    })
+
+    app.get('/todoData/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await todoCollection.findOne({ _id: new ObjectId(id) });
+      res.send(result);
+    })
+
+
+    app.put('/todoData/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const todoInfo = req.body;
+      const option = { upsert: true };
+      const update = {
+        $set: {
+          title: todoInfo.title,
+          description: todoInfo.description,
+        }
+      }
+      const result = await todoCollection.updateOne(filter, update, option);
       res.send(result);
     })
 
@@ -98,10 +119,10 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const data = req.body;
-      const option = {upsert: true};
+      const option = { upsert: true };
       const update = {
         $set: {
-          category : data.category,
+          category: data.category,
         }
       }
       const result = await todoCollection.updateOne(query, update, option);
@@ -114,7 +135,7 @@ async function run() {
       const data = await usersCollection.find().toArray();
       res.send(data);
     })
-    
+
     // app.get('/users/:userEmail', async (req, res) => {
     //   const userEmail = req.params.userEmail;
     //   const data = await usersCollection.findOne({userEmail})
@@ -134,7 +155,7 @@ async function run() {
 
         const data = await usersCollection.insertOne(user);
         res.send(data);
-        
+
       } catch (error) {
         res.status(500).send({ message: 'Internal Server Error', error: error.message })
       }
