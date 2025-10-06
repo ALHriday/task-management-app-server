@@ -13,14 +13,14 @@ const server = http.createServer(app);
 
 app.use(express.json());
 app.use(cors({
-  origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"],
+  origin: "https://task-management-app-web.netlify.app",
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"],
+    origin: "https://task-management-app-web.netlify.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
@@ -65,12 +65,14 @@ async function run() {
 
     app.get('/todo', async (req, res) => {
       const result = await todoCollection.find().toArray();
+      io.emit("refresh_tasks");
       res.send(result);
     })
 
     app.post('/todo', async (req, res) => {
       const data = req.body;
       const result = await todoCollection.insertOne(data);
+      io.emit("refresh_tasks");
       res.send(result);
     })
 
@@ -84,6 +86,7 @@ async function run() {
     app.get('/todoList/:userEmail', async (req, res) => {
       const userEmail = req.params.userEmail;
       const result = await todoCollection.find({ userEmail }).toArray();
+      io.emit("refresh_tasks");
       res.send(result);
     })
 
@@ -106,6 +109,7 @@ async function run() {
         }
       }
       const result = await todoCollection.updateOne(filter, update, option);
+      io.emit("refresh_tasks");
       res.send(result);
     })
 
@@ -113,6 +117,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await todoCollection.deleteOne(query);
+      io.emit("refresh_tasks");
       res.send(result);
     })
 
@@ -127,6 +132,7 @@ async function run() {
         }
       }
       const result = await todoCollection.updateOne(query, update, option);
+      io.emit("refresh_tasks");
       res.send(result);
     })
 
