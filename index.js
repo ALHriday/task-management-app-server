@@ -13,14 +13,14 @@ const server = http.createServer(app);
 
 app.use(express.json());
 app.use(cors({
-  origin: "https://task-management-app-web.netlify.app",
+  origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"],
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
 
 const io = new Server(server, {
   cors: {
-    origin: "https://task-management-app-web.netlify.app",
+    origin: ["http://localhost:5173", "https://task-management-app-web.netlify.app"],
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
